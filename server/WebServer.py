@@ -73,7 +73,7 @@ class WebServerBase:
             (response, request_map) = self.process_request(request, client_socket)
             client_socket.sendall(response)
     
-            if (request_map['command'] == "LEAVE"):
+            if (request_map['command'] == "EXIT"):
                 self.connections.remove(client_socket)
                 break
 
