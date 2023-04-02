@@ -13,8 +13,7 @@ The protocol follows the following header structure in its requests and response
 **Requests**
 <command>
 BBP/<version>
-HOST=<host ip address>
-USER=<user name>
+NAME=<member name>
 GROUP=<group id/name>
 MESSAGE_ID=<message id>
 MESSAGE_SUBJECT=<message subject text>
@@ -24,7 +23,7 @@ MESSAGE_CONTENT=<message content text>
 <command>
 BBP/<version>
 STATUS=<status code>
-USERS=<user names>
+MEMBERS=<member names>
 GROUPS=<group id/names>
 MESSAGES=<messages>
 ```
@@ -34,19 +33,16 @@ Each line is separated by CLRF to make parsing the content consistent on both th
 Some of these headers are optional depending on the version of the protocol being used and whether the server or client is sending the information. There are 2 versions of BBP, BBP/1 (for task 1) and BBP/2 (for task 2).
 
 ## Commands
-The following commands are supported by the BBP communication protocol regardless of version:
-- `CONNECT`
-    - A CONNECT request requires a HOST field where the host is the ip address and port number of the BBP server
-    - A CONNECT response is sent after a CONNECT request is received and the STATUS field is set to a value denoting whether the connection was successful. See status codes section for more information.  
+The following commands are supported by the BBP communication protocol regardless of version: 
 - `JOIN`
-    - A JOIN request requires no additional fields in BBP/1 but does require a GROUP field in BBP/2. In both versions the USER field is also required as well.
-    - A JOIN response will be sent to the client with the STATUS code corresponding if the user joined successfully or not. It will also be sent with the USERS and MESSAGES fields filled with all users in the group and the last two messages sent in the group 
+    - A JOIN request requires no additional fields in BBP/1 but does require a GROUP field in BBP/2. In both versions the NAME field is also required as well.
+    - A JOIN response will be sent to the client with the STATUS code corresponding if the user joined successfully or not. It will also be sent with the MEMBERS and MESSAGES fields filled with all users in the group and the last two messages sent in the group 
 - `POST`
     - A POST request requires the MESSAGE_SUBJECT and MESSAGE_CONTENT fields. It also requires the GROUP field when sending in BBP/2
     - A POST response is sent with the STATUS corresponding to whether the POST was sent successfully or not. It also sends with the message, (not including the message content) that was sent as the only message in the MESSAGES field and sends to all members of the group, including the sender. The response sent to the client starting the POST request will have a different status  code than the response sent to the other clients in the group to help the client determine if they created the message or not.
-- `USERS`
-    - A USERS request requires no additional fields in BBP/1 but requires the GROUP field in BBP/2
-    - A USERS response requires the STATUS field to signify whether the USERS request was successful or not. It also requires the USERS field to be filled with comma separated names of all users in the group
+- `MEMBERS`
+    - A MEMBERS request requires no additional fields in BBP/1 but requires the GROUP field in BBP/2
+    - A MEMBERS response requires the STATUS field to signify whether the MEMBERS request was successful or not. It also requires the MEMBERS field to be filled with comma separated names of all users in the group
 - `MESSAGE`
     - A MESSAGE request requires the MESSAGE_ID field in both versions of BBP and also requires the GROUP field in BBP/2
     - A MESSAGE response requires the STATUS field to signify whether the message content retrieval was successful and should fill the MESSAGES field with a single message including its message content
@@ -55,7 +51,7 @@ The following commands are supported by the BBP communication protocol regardles
     - A GROUPS response requires the STATUS field to signify whether the groups request was received successfully and should fill the GROUPS field with the list of all available groups on the BBP server
 - `LEAVE`
     - A LEAVE request requires no additional fields in BBP/1 but requires the GROUP field in BBP/2
-    - A LEAVE response is sent with the STATUS field corresponding to whether the LEAVE was sent successfully or not. It also sends with the USERS field filled with the user who initiated the LEAVE to all members of the group.
+    - A LEAVE response is sent with the STATUS field corresponding to whether the LEAVE was sent successfully or not. It also sends with the MEMBERS field filled with the user who initiated the LEAVE to all members of the group.
 - `EXIT`
     - An EXIT request requires no additional fields
     - An EXIT response is sent with the STATUS field corresponding to whether the EXIT was successful
@@ -103,7 +99,7 @@ The server attaches a status code to tell the client whether their requests were
     - Request received, continuing process
 - `2xx: Success`
     - The action was successfully received, and accepted
-- 3`xx: Redirection`
+- `3xx: Redirection`
     - Further action must be taken in order to the request
 - `4xx: Client Error`
     - The request contains bad syntax or cannot fulfilled
