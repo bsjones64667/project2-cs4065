@@ -6,6 +6,7 @@ import threading
 from group import Group
 from member import Member
 from message import Message
+import re
 
 status_codes = {
    "OK": "200",
@@ -38,7 +39,7 @@ class WebServerBase:
       group_match = [g for g in self.groups if request_map['group'] != None and g.id == request_map['group']]
       if (len(group_match) == 0):
          return f"{response_header} STATUS={status_codes['BadRequest']}\n"
-      elif (any(member for member in group_match[0].members if member.name == name)):
+      elif (any(member for member in group_match[0].members if member.name == name or member.connection_socket == client_socket)):
          return f"{response_header} STATUS={status_codes['Conflict']}\n"
       elif (name == None):
          return f"{response_header} STATUS={status_codes['BadRequest']}\n"
@@ -70,7 +71,8 @@ class WebServerBase:
             new_message = Message(len(g.messages), member_matches[0], datetime.datetime.now(), subject, content)
             g.messages.append(new_message)
             for m in g.members:
-               m.connection_socket.sendall(f"{response_header} STATUS={status_codes['Created']} MESSAGES={new_message.to_json(True)}\n".encode())
+               if (m.connection_socket != client_socket):
+                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['Created']} MESSAGES={new_message.to_json(True)}\n".encode())
 
       if (new_message == None):
          f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None}\n"
@@ -141,11 +143,11 @@ class WebServerBase:
       response_header = f"{request_map['command']} {request_map['version']}"
       match request_map['command']:
          case "JOIN":
-               return self.handle_join(request_map, response_header, client_socket)
+            return self.handle_join(request_map, response_header, client_socket)
          case "POST":
             return self.handle_post(request_map, response_header, client_socket)
          case "MEMBERS":
-               self.handle_members(request_map, response_header)
+            return self.handle_members(request_map, response_header)
          case "MESSAGE":
             return self.handle_message(request_map, response_header)
          case "GROUPS":
@@ -157,32 +159,29 @@ class WebServerBase:
          case _:
             return f"{response_header} STATUS={status_codes['MethodNotAllowed']}\n"
 
-   def get_request_map(self, request_line):
-      name = [p.split("NAME=")[1] for p in request_line if p.startswith("NAME=")]
-      group = [p.split("GROUP=")[1] for p in request_line if p.startswith("GROUP=")]
-      message_id = [p.split("MESSAGE_ID=")[1] for p in request_line if p.startswith("MESSAGE_ID=")]
-      message_subject = [p.split("MESSAGE_SUBJECT=")[1] for p in request_line if p.startswith("MESSAGE_SUBJECT=")]
-      message_content = [p.split("MESSAGE_CONTENT=")[1] for p in request_line if p.startswith("MESSAGE_CONTENT=")]
-      
-      version = request_line[1] if len(request_line) > 0 else None
+   def get_request_map(self, request):
+      # Define the regex pattern to match the string
+      pattern = r'(?P<command>[^ ]+) (?P<version>BBP/\d+)?(?: NAME=(?P<name>[^=\s]+(?:\s(?!(?:GROUP|MESSAGE_ID|MESSAGE_SUBJECT|MESSAGE_CONTENT))[^=\s]+)*))?(?: GROUP=(?P<group>\d+))?(?: MESSAGE_ID=(?P<message_id>\d+))?(?: MESSAGE_SUBJECT=(?P<message_subject>[^=\s]+(?:\s(?!(?:GROUP|MESSAGE_ID|NAME|MESSAGE_CONTENT))[^=\s]+)*))?(?: MESSAGE_CONTENT=(?P<message_content>[^=\s]+(?:\s(?!(?:GROUP|MESSAGE_ID|MESSAGE_SUBJECT|NAME))[^=\s]+)*))?'
 
-      return {
-         "command": request_line[0] if len(request_line) >= 0 else None,
-         "version": version,
-         "name": name[0] if len(name) > 0 else None,
-         "group": int(group[0]) if len(group) > 0 and version == "BBP/2" 
-                     else self.public_group_id if version == "BBP/1" 
-                     else None,
-         "message_id": int(message_id[0]) if len(message_id) > 0 else None,
-         "message_subject": message_subject[0] if len(message_subject) > 0 else None,
-         "message_content": message_content[0] if len(message_content) > 0 else None,
-      }
+      # Use re.match to extract the values from the input string using the pattern
+      match = re.match(pattern, request.decode())
+
+      # Create a dictionary from the extracted values
+      result = match.groupdict()
+
+      if (result['version'] == "BBP/1"):
+         result['group']= self.public_group_id
+      else:
+         result['group']= int(result['group'])
+      if (result['message_id'] != None):
+         result['message_id']= int(result['message_id'])
+
+      return result
 
    def process_request(self, request, client_socket):
-      request_line = request.decode().split()
-      if (len(request_line) == 0):
+      request_map = self.get_request_map(request)
+      if (request_map['command'] == None or request_map['version'] == None):
          return ("\n".encode(), None)
-      request_map = self.get_request_map(request_line)
       response = self.handle_command(request_map, client_socket)
 
       return (response.encode(), request_map)
