@@ -40,45 +40,91 @@ public class BBPClient extends Thread {
         String cmd = splittedInput[0];
         if (cmd.equals("%connect")) {
             BBPVersion = "BBP/1";
-            connect(splittedInput[1], splittedInput[2]);
+            try {
+                connect(splittedInput[1], splittedInput[2]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
+            
         } else if (cmd.equals("%exit")) {
             BBPVersion = "BBP/1";
             disconnect();
         } else if (cmd.equals("%join")) {
-            String memberName = splittedInput[1];
             BBPVersion = "BBP/1";
-            join(memberName);
+            try {
+                join(splittedInput[1]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%groupjoin")) {
-            String memberName = splittedInput[2];
             BBPVersion = "BBP/2";
-            groupjoin(memberName, splittedInput[1]);
+            try {
+                groupjoin(splittedInput[2], splittedInput[1]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%post")) {
             BBPVersion = "BBP/1";
-            post(splittedInput[1], splittedInput[2]);
+            try {
+                post(splittedInput[1], splittedInput[2]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%grouppost")) {
             BBPVersion = "BBP/2";
-            grouppost(splittedInput[1], splittedInput[2], splittedInput[3]);
+            try {
+                grouppost(splittedInput[1], splittedInput[2], splittedInput[3]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%users")) {
             BBPVersion = "BBP/1";
             users();
         } else if (cmd.equals("%groupusers")) {
             BBPVersion = "BBP/2";
-            groupusers(splittedInput[1]);
+            try {
+                groupusers(splittedInput[1]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%leave")) {
             BBPVersion = "BBP/1";
             leave();
         } else if (cmd.equals("%groupleave")) {
             BBPVersion = "BBP/2";
-            groupleave(splittedInput[1]);
+            try {
+                groupleave(splittedInput[1]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%message")) {
             BBPVersion = "BBP/1";
-            message(splittedInput[1]);
+            try {
+                message(splittedInput[1]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%groupmessage")) {
             BBPVersion = "BBP/2";
-            groupmessage(splittedInput[1], splittedInput[2]);
+            try {
+                groupmessage(splittedInput[1], splittedInput[2]);
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("Not enough parameters for the command.");
+                System.out.println("ArrayIndexOutOfBoundsException: " + ex);
+            }
         } else if (cmd.equals("%groups")) {
             BBPVersion = "BBP/2";
             groups();
+        } else {
+            System.out.println("Invalid command.");
         }
 
         return cmd;
