@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class BBPClient extends Thread {
@@ -171,7 +173,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         try {
             controlWriter.close();
             controlSocket.close();
@@ -186,7 +188,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
            System.out.println("Successfully joined.");
         }
@@ -197,7 +199,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
            System.out.println("Successfully joined group " + groupName);
         }
@@ -209,7 +211,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 201);
+        currentResponse = sendCommand(command, Arrays.asList(201));
         if (currentResponse != null) {
             System.out.println("Successfully sent message.");
         }
@@ -221,7 +223,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 201);
+        currentResponse = sendCommand(command, Arrays.asList(201));
         if (currentResponse != null) {
             System.out.println("Successfully sent message to " + group);
         }
@@ -232,7 +234,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200, 204));
         if (currentResponse != null) {
             System.out.println("Current Users: ");
             System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
@@ -245,7 +247,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200, 204));
         if (currentResponse != null) {
             System.out.println("Current Users in " + group + ": ");
             System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
@@ -257,7 +259,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
             System.out.println("Successfully left the group.");
         }
@@ -268,7 +270,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
             System.out.println("Successfully left group " + group);
         }
@@ -279,7 +281,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
         System.out.println("Message Content: ");
             System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
@@ -291,7 +293,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
             System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
         }
@@ -302,19 +304,19 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, 200);
+        currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
-        System.out.println("Groups: ");
+            System.out.println("Groups: ");
             System.out.println(currentResponse.substring(currentResponse.indexOf("GROUPS=") + "GROUPS=".length()));
         }
     }
 
-    private String sendCommand(String command, int expected_response_code) {
+    private String sendCommand(String command, List<Integer> expected_response_code) {
         bbpUpdates.pause();
         String response = "";
         try {
             controlWriter.println(command);
-            sleep(100);
+            sleep(500);
             response = bbpUpdates.getCurrentResponse();
             if (DEBUG) {
                 System.out.println("Current BBP response: " + response);
@@ -323,7 +325,7 @@ public class BBPClient extends Thread {
             String[] splittedResponse = response.split(" ");
 
             // check validity of response
-            if (!(splittedResponse[2].equals("STATUS=" + expected_response_code))) {
+            if (!expected_response_code.stream().anyMatch(s -> splittedResponse[2].equals("STATUS=" + s))) {
                 throw new IOException("Bad response: " + response);
             }
         } catch (IOException ex) {
