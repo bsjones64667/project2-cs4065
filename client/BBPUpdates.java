@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BBPUpdates implements Runnable {
     private Socket controlSocket = null;
@@ -74,22 +77,19 @@ public class BBPUpdates implements Runnable {
             }
             try {
                 currentResponse = controlReader.readLine();
-                String[] splittedResponse = currentResponse.split(" ");
-                String status = currentResponse.substring(currentResponse.indexOf("STATUS=") + "STATUS=".length());
-                if (splittedResponse[0].equals("POST")) {
+                HashMap<String, String> parsedResponse = parseResponse(currentResponse);
+                if (parsedResponse.get("command").equals("POST")) {
                     System.out.println("Received new message:");
-                    System.out.println(
-                            currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
-                } else if (splittedResponse[0].equals("LEAVE") && currentResponse.indexOf("MEMBERS=") != -1) {
-                    System.out.println(currentResponse);
+                    System.out.println(parsedResponse.get("messages"));
+                    System.out.println("\n");
+                } else if (parsedResponse.get("command").equals("LEAVE") && currentResponse.indexOf("MEMBERS=") != -1) {
                     System.out.println("Member left group:");
-                    System.out.println(
-                            currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
-                } else if (splittedResponse[0].equals("JOIN") && currentResponse.indexOf("MEMBERS=") != -1 && status.startsWith("201")) {
-                    System.out.println(currentResponse);
+                    System.out.println(parsedResponse.get("members"));
+                    System.out.println("\n");
+                } else if (parsedResponse.get("command").equals("JOIN") && currentResponse.indexOf("MEMBERS=") != -1 && parsedResponse.get("status").equals("201")) {
                     System.out.println("Member joined group:");
-                    System.out.println(
-                            currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+                    System.out.println(parsedResponse.get("members"));
+                    System.out.println("\n");
                 }
             } catch (IOException ex) {
                 System.out.println("IOException: " + ex);
@@ -99,6 +99,46 @@ public class BBPUpdates implements Runnable {
 
         }
     }
+
+    public HashMap<String, String> parseResponse(String response) {
+      // Define the regex pattern to match the string
+      String pattern = "(?<command>\\S+)\\s+(?<version>\\S+)\\s+STATUS=(?<status>\\d+)?(?: MEMBERS=(?<members>(\\[.*?\\])|\\S+))?(?: GROUPS=(?<groups>(\\[.*?\\])|\\S+))?(?: MESSAGES=(?<messages>(\\{.*?\\})|\\S+))?";
+
+      // Use Pattern.matcher() to extract the pattern from the input string
+      Pattern regex = Pattern.compile(pattern);
+      Matcher matcher = regex.matcher(response);
+
+      HashMap<String, String> result = new HashMap<String, String>();
+      // Create a dictionary from the matched groups
+      while (matcher.find()) {
+          String command = matcher.group("command");
+          String version = matcher.group("version");
+          String status = matcher.group("status");
+          result.put("command", command);
+          result.put("version", version);
+          result.put("status", status);
+
+          String members = matcher.group("members");
+            if (members != null) {
+                members = members.replaceAll("(^\\[)|(\\]$)", "");
+                result.put("members", members);
+            }
+
+            String groups = matcher.group("groups");
+            if (groups != null) {
+                groups = groups.replaceAll("(^\\[)|(\\]$)", "");
+                result.put("groups", groups);
+            }
+
+            String messages = matcher.group("messages");
+            if (messages != null) {
+                messages = messages.replaceAll("(^\\{)|(\\}$)", "");
+                result.put("messages", messages);
+            }
+      }
+
+      return result;
+  }
 
     public void stop() {
         running = false;

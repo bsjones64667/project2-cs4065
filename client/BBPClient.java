@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -132,30 +133,9 @@ public class BBPClient extends Thread {
         return cmd;
     }
 
-    // private String generateServerCommand(String command) {
-    // String generatedCommand;
-    // generatedCommand = command;
-    // generatedCommand += " " + BBPVersion;
-    // if (command.equals("EXIT")) {
-    // }
-    // else if (command.equals("JOIN")) {
-    // generatedCommand += " " + "NAME=" + memberName;
-    // if (BBPVersion.equals("BBP/2")) {
-    // generatedCommand += " " + "GROUP=" + group;
-    // }
-    // }
-    // if (DEBUG) {
-    // System.out.println("Generated Command: " + generatedCommand);
-    // }
-    // return generatedCommand;
-    // }
-
     private void connect(String address, String port) {
         try {
             controlSocket = new Socket(address, Integer.parseInt(port));
-            // InputStream is = controlSocket.getInputStream();
-            // isr = new InputStreamReader(is);
-            // controlReader = new BufferedReader(isr);
             controlWriter = new PrintWriter(controlSocket.getOutputStream(), true);
             bbpUpdates = new BBPUpdates(controlSocket);
             t = new Thread(bbpUpdates);
@@ -321,11 +301,10 @@ public class BBPClient extends Thread {
             if (DEBUG) {
                 System.out.println("Current BBP response: " + response);
             }
-
-            String[] splittedResponse = response.split(" ");
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(response);
 
             // check validity of response
-            if (!expected_response_code.stream().anyMatch(s -> splittedResponse[2].equals("STATUS=" + s))) {
+            if (!expected_response_code.stream().anyMatch(s -> s == Integer.parseInt(parsedResponse.get("status")))) {
                 throw new IOException("Bad response: " + response);
             }
         } catch (IOException ex) {

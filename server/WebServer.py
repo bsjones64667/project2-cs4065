@@ -1,12 +1,12 @@
 import datetime
 import json
+import re
 import socket
 import threading
 
 from group import Group
 from member import Member
 from message import Message
-import re
 
 status_codes = {
    "OK": "200",
@@ -171,7 +171,7 @@ class WebServerBase:
 
       if (result['version'] == "BBP/1"):
          result['group']= self.public_group_id
-      else:
+      elif(result['command'] != "GROUPS"):
          result['group']= int(result['group'])
       if (result['message_id'] != None):
          result['message_id']= int(result['message_id'])
