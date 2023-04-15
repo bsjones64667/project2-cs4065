@@ -1,9 +1,11 @@
 package client;
 
-import java.io.*;
-import java.net.*;
-import java.util.regex.*;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class BBPUpdates implements Runnable {
     private Socket controlSocket = null;
@@ -73,6 +75,7 @@ public class BBPUpdates implements Runnable {
             try {
                 currentResponse = controlReader.readLine();
                 String[] splittedResponse = currentResponse.split(" ");
+                String status = currentResponse.substring(currentResponse.indexOf("STATUS=") + "STATUS=".length());
                 if (splittedResponse[0].equals("POST")) {
                     System.out.println("Received new message:");
                     System.out.println(
@@ -80,6 +83,11 @@ public class BBPUpdates implements Runnable {
                 } else if (splittedResponse[0].equals("LEAVE") && currentResponse.indexOf("MEMBERS=") != -1) {
                     System.out.println(currentResponse);
                     System.out.println("Member left group:");
+                    System.out.println(
+                            currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+                } else if (splittedResponse[0].equals("JOIN") && currentResponse.indexOf("MEMBERS=") != -1 && status.startsWith("201")) {
+                    System.out.println(currentResponse);
+                    System.out.println("Member joined group:");
                     System.out.println(
                             currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
                 }

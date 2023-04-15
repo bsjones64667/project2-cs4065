@@ -1,8 +1,10 @@
 package client;
 
-import java.io.*;
-import java.net.*;
-import java.util.regex.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class BBPClient extends Thread {
@@ -22,70 +24,64 @@ public class BBPClient extends Thread {
     public void run() {
         in = new Scanner(System.in);
         String currentInput;
-        boolean cont = true;
-        while (cont) {
-            System.out.println("Please enter a command (commands found in README):");
+        String cmd = "";
+        while (!cmd.equals("%exit")) {
+            System.out.println("\nPlease enter a command (commands found in README):");
             currentInput = in.nextLine();
             System.out.println("\nCommand Received: " + currentInput);
-            processInputCmd(currentInput);
-            System.out.println("Would you like to continue sending commands? (enter true or false)");
-            cont = in.nextBoolean();
-            in.nextLine();
-            if (cont) {
-                System.out.println("Continuing session.");
-            }
+            cmd = processInputCmd(currentInput);
         }
         System.out.println("Ending current session.");
         in.close();
     }
 
-    private void processInputCmd(String input) {
+    private String processInputCmd(String input) {
         String[] splittedInput = input.split("\\s+");
-        if (splittedInput[0].equals("%connect")) {
+        String cmd = splittedInput[0];
+        if (cmd.equals("%connect")) {
             BBPVersion = "BBP/1";
             connect(splittedInput[1], splittedInput[2]);
-        } else if (splittedInput[0].equals("%exit")) {
+        } else if (cmd.equals("%exit")) {
             BBPVersion = "BBP/1";
             disconnect();
-        } else if (splittedInput[0].equals("%join")) {
-            System.out.println("Enter the name you will use during this session:");
-            String memberName = in.nextLine();
+        } else if (cmd.equals("%join")) {
+            String memberName = splittedInput[1];
             BBPVersion = "BBP/1";
             join(memberName);
-        } else if (splittedInput[0].equals("%groupjoin")) {
-            System.out.println("Enter the name you will use during this session:");
-            String memberName = in.nextLine();
+        } else if (cmd.equals("%groupjoin")) {
+            String memberName = splittedInput[2];
             BBPVersion = "BBP/2";
-
             groupjoin(memberName, splittedInput[1]);
-        } else if (splittedInput[0].equals("%post")) {
+        } else if (cmd.equals("%post")) {
             BBPVersion = "BBP/1";
             post(splittedInput[1], splittedInput[2]);
-        } else if (splittedInput[0].equals("%grouppost")) {
+        } else if (cmd.equals("%grouppost")) {
             BBPVersion = "BBP/2";
             grouppost(splittedInput[1], splittedInput[2], splittedInput[3]);
-        } else if (splittedInput[0].equals("%users")) {
+        } else if (cmd.equals("%users")) {
             BBPVersion = "BBP/1";
             users();
-        } else if (splittedInput[0].equals("%groupusers")) {
+        } else if (cmd.equals("%groupusers")) {
             BBPVersion = "BBP/2";
             groupusers(splittedInput[1]);
-        } else if (splittedInput[0].equals("%leave")) {
+        } else if (cmd.equals("%leave")) {
             BBPVersion = "BBP/1";
             leave();
-        } else if (splittedInput[0].equals("%groupleave")) {
+        } else if (cmd.equals("%groupleave")) {
             BBPVersion = "BBP/2";
             groupleave(splittedInput[1]);
-        } else if (splittedInput[0].equals("%message")) {
+        } else if (cmd.equals("%message")) {
             BBPVersion = "BBP/1";
             message(splittedInput[1]);
-        } else if (splittedInput[0].equals("%groupmessage")) {
+        } else if (cmd.equals("%groupmessage")) {
             BBPVersion = "BBP/2";
             groupmessage(splittedInput[1], splittedInput[2]);
-        } else if (splittedInput[0].equals("%groups")) {
+        } else if (cmd.equals("%groups")) {
             BBPVersion = "BBP/2";
             groups();
         }
+
+        return cmd;
     }
 
     // private String generateServerCommand(String command) {
@@ -145,7 +141,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Successfully joined.");
+        if (currentResponse != null) {
+           System.out.println("Successfully joined.");
+        }
     }
 
     private void groupjoin(String name, String groupName) {
@@ -154,7 +152,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Successfully joined group " + groupName);
+        if (currentResponse != null) {
+           System.out.println("Successfully joined group " + groupName);
+        }
     }
 
     private void post(String messageSubject, String messageContent) {
@@ -164,7 +164,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 201);
-        System.out.println("Successfully sent message.");
+        if (currentResponse != null) {
+            System.out.println("Successfully sent message.");
+        }
     }
 
     private void grouppost(String group, String messageSubject, String messageContent) {
@@ -174,7 +176,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 201);
-        System.out.println("Successfully sent message to " + group);
+        if (currentResponse != null) {
+            System.out.println("Successfully sent message to " + group);
+        }
     }
 
     private void users() {
@@ -183,8 +187,10 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Current Users: ");
-        System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+        if (currentResponse != null) {
+            System.out.println("Current Users: ");
+            System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+        }
 
     }
 
@@ -194,8 +200,10 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Current Users in " + group + ": ");
-        System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+        if (currentResponse != null) {
+            System.out.println("Current Users in " + group + ": ");
+            System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+        }
     }
 
     private void leave() {
@@ -204,7 +212,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Successfully left the group.");
+        if (currentResponse != null) {
+            System.out.println("Successfully left the group.");
+        }
     }
 
     private void groupleave(String group) {
@@ -213,7 +223,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Successfully left group " + group);
+        if (currentResponse != null) {
+            System.out.println("Successfully left group " + group);
+        }
     }
 
     private void message(String id) {
@@ -222,8 +234,10 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
+        if (currentResponse != null) {
         System.out.println("Message Content: ");
-        System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
+            System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
+        }
     }
 
     private void groupmessage(String group, String id) {
@@ -232,7 +246,9 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
-        System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
+        if (currentResponse != null) {
+            System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
+        }
     }
 
     private void groups() {
@@ -241,8 +257,10 @@ public class BBPClient extends Thread {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, 200);
+        if (currentResponse != null) {
         System.out.println("Groups: ");
-        System.out.println(currentResponse.substring(currentResponse.indexOf("GROUPS=") + "GROUPS=".length()));
+            System.out.println(currentResponse.substring(currentResponse.indexOf("GROUPS=") + "GROUPS=".length()));
+        }
     }
 
     private String sendCommand(String command, int expected_response_code) {
@@ -260,13 +278,14 @@ public class BBPClient extends Thread {
 
             // check validity of response
             if (!(splittedResponse[2].equals("STATUS=" + expected_response_code))) {
-                throw new IOException(
-                        "Bad response: " + response);
+                throw new IOException("Bad response: " + response);
             }
         } catch (IOException ex) {
             System.out.println("IOException: " + ex);
+            return null;
         } catch (InterruptedException ex) {
             System.out.println("InterruptedException: " + ex);
+            return null;
         }
         bbpUpdates.resume();
         return response;
