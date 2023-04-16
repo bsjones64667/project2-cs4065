@@ -16,12 +16,13 @@ public class BBPClient extends Thread  {
     private Socket controlSocket = null;
     private PrintWriter controlWriter = null;
     private String currentResponse;
-    private boolean DEBUG = true; // Debug Flag
+    private boolean DEBUG = false; // Debug Flag
     private Scanner in;
     private String BBPVersion;
     private InputStreamReader isr;
     private BBPUpdates bbpUpdates;
     private Thread t;
+    private String lastResponseStatus = "";
 
     public BBPClient() {
     }
@@ -31,10 +32,12 @@ public class BBPClient extends Thread  {
         String currentInput;
         String cmd = "";
         help();
-        while (!cmd.equals("%exit")) {
+        while (!(cmd.equals("%exit") && lastResponseStatus.equals("200"))) {
             System.out.println("\nPlease enter a command (commands found in README):");
             currentInput = in.nextLine();
-            System.out.println("\nCommand Received: " + currentInput);
+            if (DEBUG) {
+               System.out.println("\nCommand Received: " + currentInput);
+            }
             cmd = processInputCmd(currentInput);
         }
         System.out.println("Ending current session.");
@@ -215,12 +218,14 @@ public class BBPClient extends Thread  {
             System.out.println("Generated Command: " + command);
         }
         currentResponse = sendCommand(command, Arrays.asList(200));
-        try {
-            controlWriter.close();
-            controlSocket.close();
-            bbpUpdates.stop();
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex);
+        if (currentResponse != null) {
+           try {
+               controlWriter.close();
+               controlSocket.close();
+               bbpUpdates.stop();
+           } catch (IOException ex) {
+               System.out.println("IOException: " + ex);
+           }
         }
     }
 
@@ -277,8 +282,9 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200, 204));
         if (currentResponse != null) {
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
             System.out.println("Current Users: ");
-            System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+            System.out.println(parsedResponse.get("members"));
         }
 
     }
@@ -290,8 +296,9 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200, 204));
         if (currentResponse != null) {
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
             System.out.println("Current Users in " + group + ": ");
-            System.out.println(currentResponse.substring(currentResponse.indexOf("MEMBERS=") + "MEMBERS=".length()));
+            System.out.println(parsedResponse.get("members"));
         }
     }
 
@@ -324,8 +331,9 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
-        System.out.println("Message Content: ");
-            System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
+            System.out.println("Message With Content: ");
+            System.out.println(parsedResponse.get("messages"));
         }
     }
 
@@ -336,7 +344,9 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
-            System.out.println("Message Content: " + currentResponse.substring(currentResponse.indexOf("MESSAGES=") + "MESSAGES=".length()));
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
+            System.out.println("Message With Content: ");
+            System.out.println(parsedResponse.get("messages"));
         }
     }
 
@@ -363,6 +373,7 @@ public class BBPClient extends Thread  {
               System.out.println("Current BBP response: " + response);
           }
           HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(response);
+          lastResponseStatus = parsedResponse.get("status");
 
           // check validity of response
           if (!expected_response_code.stream().anyMatch(s -> s == Integer.parseInt(parsedResponse.get("status")))) {
@@ -400,7 +411,6 @@ public class BBPClient extends Thread  {
         // Infinitely run a terminal searching for user inputted commands
         BBPClient client = new BBPClient();
         client.start();
-
     }
 
 }

@@ -102,7 +102,7 @@ public class BBPUpdates implements Runnable {
 
     public HashMap<String, String> parseResponse(String response) {
       // Define the regex pattern to match the string
-      String pattern = "(?<command>\\S+)\\s+(?<version>\\S+)\\s+STATUS=(?<status>\\d+)?(?:\\s+MEMBERS=(?<members>[^=\\s]+(?:\\s(?!GROUPS|MESSAGES)[^=\\s]+)*))?(?:\\s+GROUPS=(?<groups>[^=\\s]+(?:\\s(?!MEMBERS|MESSAGES)[^=\\s]+)*))?(?:\\s+MESSAGES=(?<messages>[^=\\s]+(?:\\s(?!MEMBERS|GROUPS)[^=\\s]+)*))?";
+      String pattern = "(?<command>\\S+)\\s+(?<version>\\S+)\\s+STATUS=(?<status>\\d+)?(?:\\s+MEMBERS=(?<members>[^=\\s]+(?:\\s(?!GROUPS=|MESSAGES=)[^=\\s]+)*))?(?:\\s+GROUPS=(?<groups>[^=\\s]+(?:\\s(?!MEMBERS=|MESSAGES=)[^=\\s]+)*))?(?:\\s+MESSAGES=(?<messages>[^=\\s]+(?:\\s(?!MEMBERS=|GROUPS=)[^=\\s]+)*))?";
 
       // Use Pattern.matcher() to extract the pattern from the input string
       Pattern regex = Pattern.compile(pattern);
