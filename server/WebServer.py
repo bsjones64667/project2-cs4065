@@ -36,7 +36,8 @@ class WebServerBase:
 
    def handle_join(self, request_map, response_header, client_socket: socket):
       name = request_map["name"]
-      group_match = [g for g in self.groups if request_map['group'] != None and g.id == request_map['group']]
+      group = request_map['group']
+      group_match = [g for g in self.groups if group != None and g.id == group]
       if (len(group_match) == 0):
          return f"{response_header} STATUS={status_codes['BadRequest']}\n"
       elif (any(member for member in group_match[0].members if member.name == name or member.connection_socket == client_socket)):
@@ -47,12 +48,12 @@ class WebServerBase:
       group_match = group_match[0]
       new_member = Member(client_socket, name)
       for member in group_match.members:
-         member.connection_socket.sendall(f"{response_header} STATUS={status_codes['Created']} MEMBERS={json.dumps(new_member.name)}\n".encode())
+         member.connection_socket.sendall(f"{response_header} STATUS={status_codes['Created']} MEMBERS={json.dumps(new_member.name)} GROUPS={json.dumps(group)}\n".encode())
 
       group_match.members.append(new_member)
       mapped_members = [member.name for member in group_match.members]
       mapped_messages = [message for message in group_match.get_last_messages(2, True)]
-      return f"{response_header} STATUS={status_codes['OK']} MEMBERS={json.dumps(mapped_members)} MESSAGES={mapped_messages}\n"
+      return f"{response_header} STATUS={status_codes['OK']} MEMBERS={json.dumps(mapped_members)} MESSAGES={mapped_messages} GROUPS={json.dumps(group)}\n"
 
    def handle_post(self, request_map, response_header, client_socket: socket):
       subject = request_map["message_subject"]
@@ -72,37 +73,38 @@ class WebServerBase:
             g.messages.append(new_message)
             for m in g.members:
                if (m.connection_socket != client_socket):
-                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['Created']} MESSAGES={new_message.to_json(True)}\n".encode())
+                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['Created']} GROUPS={json.dumps(group)} MESSAGES={new_message.to_json(True)}\n".encode())
 
       if (new_message == None):
          f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None}\n"
 
-      return f"{response_header} STATUS={status_codes['Created']} MESSAGES={new_message.to_json(True)}\n"
+      return f"{response_header} STATUS={status_codes['OK']} GROUPS={json.dumps(group)} MESSAGES={new_message.to_json(True)}\n"
 
    def handle_members(self, request_map, response_header):
-      group_match = [g for g in self.groups if request_map['group'] != None and g.id == request_map['group']]
+      group = request_map['group']
+      group_match = [g for g in self.groups if group != None and g.id == group]
       if (len(group_match) == 0):
          return f"{response_header} STATUS={status_codes['NotFound']}\n"
       
       group_match = group_match[0]
       mapped_members = [member.name for member in group_match.members]
-      return f"{response_header} STATUS={status_codes['OK'] if len(mapped_members) > 0 else status_codes['NoContent']} MEMBERS={json.dumps(mapped_members)}\n"
+      return f"{response_header} STATUS={status_codes['OK'] if len(mapped_members) > 0 else status_codes['NoContent']} MEMBERS={json.dumps(mapped_members)} GROUPS={json.dumps(group)}\n"
 
    def handle_message(self, request_map, response_header):
       message_id = request_map["message_id"]
       group = request_map["group"]
 
       if (message_id == None or group == None):
-         return f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None}\n"
+         return f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None} GROUPS={json.dumps(group)}\n"
 
       for g in self.groups:
          if (g.id == group):
             message_matches = [m for m in g.messages if m.message_id == message_id]
             if (len(message_matches) == 0):
                return f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None}\n"
-            return f"{response_header} STATUS={status_codes['OK']} MESSAGES={message_matches[0].to_json(False)}\n"
+            return f"{response_header} STATUS={status_codes['OK']} MESSAGES={message_matches[0].to_json(False)} GROUPS={json.dumps(group)}\n"
 
-      return f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None}\n"
+      return f"{response_header} STATUS={status_codes['BadRequest']} MESSAGES={None} GROUPS={json.dumps(group)}\n"
 
    def handle_groups(self, request_map, response_header):
       mapped_groups = [Group(group.name, group.id, [m.name for m in group.members], group.get_last_messages(0, True)).__dict__ for group in self.groups]
@@ -117,7 +119,7 @@ class WebServerBase:
          if (len(members_in_group_matching_socket) > 0):
             group.members = [member for member in group.members if member.connection_socket != client_socket]
             for m in group.members:
-                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['OK']} MEMBERS={members_in_group_matching_socket[0].name}\n".encode())
+                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['OK']} MEMBERS={members_in_group_matching_socket[0].name} GROUPS={json.dumps(group.id)}\n".encode())
          else:
             return f"{response_header} STATUS={status_codes['BadRequest']}\n"
       if (len(group_matches) == 0):
@@ -131,7 +133,7 @@ class WebServerBase:
          if (len(members_in_group_matching_socket) > 0):
             group.members = [member for member in group.members if member.connection_socket != client_socket]
             for m in group.members:
-                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['OK']} MEMBERS={members_in_group_matching_socket[0].name}\n".encode())
+                  m.connection_socket.sendall(f"{response_header} STATUS={status_codes['OK']} MEMBERS={members_in_group_matching_socket[0].name} GROUPS={json.dumps(group.id)}\n".encode())
 
    def handle_exit(self, response_header, client_socket: socket):
       for group in self.groups:

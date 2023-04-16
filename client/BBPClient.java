@@ -9,8 +9,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class BBPClient extends Thread {
+public class BBPClient extends Thread  {
     private Socket controlSocket = null;
     private PrintWriter controlWriter = null;
     private String currentResponse;
@@ -28,6 +30,7 @@ public class BBPClient extends Thread {
         in = new Scanner(System.in);
         String currentInput;
         String cmd = "";
+        help();
         while (!cmd.equals("%exit")) {
             System.out.println("\nPlease enter a command (commands found in README):");
             currentInput = in.nextLine();
@@ -39,12 +42,19 @@ public class BBPClient extends Thread {
     }
 
     private String processInputCmd(String input) {
-        String[] splittedInput = input.split("\\s+");
-        String cmd = splittedInput[0];
+         String[] splittedInput = input.split("\\s+");
+         String cmd = splittedInput[0];
+
         if (cmd.equals("%connect")) {
             BBPVersion = "BBP/1";
+            Pattern pattern = Pattern.compile("^%connect\\s+-a\\s+(\\S+)\\s+-p\\s+(\\d+)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                connect(splittedInput[1], splittedInput[2]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                connect(matcher.group(1), matcher.group(2));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
@@ -55,32 +65,56 @@ public class BBPClient extends Thread {
             disconnect();
         } else if (cmd.equals("%join")) {
             BBPVersion = "BBP/1";
+            Pattern pattern = Pattern.compile("^%join\\s+-n\\s+(\\S+(?:\\s+\\S+)*)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                join(splittedInput[1]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                join(matcher.group(1));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
             }
         } else if (cmd.equals("%groupjoin")) {
             BBPVersion = "BBP/2";
+            Pattern pattern = Pattern.compile("^%groupjoin\\s+-g\\s+(\\d+)\\s+-n\\s+(\\S+(?:\\s+\\S+)*)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                groupjoin(splittedInput[2], splittedInput[1]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                groupjoin(matcher.group(2), matcher.group(1));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
             }
         } else if (cmd.equals("%post")) {
             BBPVersion = "BBP/1";
+            Pattern pattern = Pattern.compile("^%post\\s+-s\\s+(\\S+(?:\\s+\\S+)*)\\s+-c\\s+(\\S+(?:\\s+\\S+)*)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                post(splittedInput[1], splittedInput[2]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                post(matcher.group(1), matcher.group(2));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
             }
         } else if (cmd.equals("%grouppost")) {
             BBPVersion = "BBP/2";
+            Pattern pattern = Pattern.compile("^%grouppost\\s+-g\\s+(\\d+)\\s+-s\\s+(\\S+(?:\\s+\\S+)*)\\s+-c\\s+(\\S+(?:\\s+\\S+)*)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                grouppost(splittedInput[1], splittedInput[2], splittedInput[3]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                grouppost(matcher.group(1), matcher.group(2), matcher.group(3));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
@@ -90,8 +124,14 @@ public class BBPClient extends Thread {
             users();
         } else if (cmd.equals("%groupusers")) {
             BBPVersion = "BBP/2";
+            Pattern pattern = Pattern.compile("^%groupusers\\s+-g\\s+(\\d+)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                groupusers(splittedInput[1]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                groupusers(matcher.group(1));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
@@ -101,24 +141,42 @@ public class BBPClient extends Thread {
             leave();
         } else if (cmd.equals("%groupleave")) {
             BBPVersion = "BBP/2";
+            Pattern pattern = Pattern.compile("^%groupleave\\s+-g\\s+(\\d+)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                groupleave(splittedInput[1]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                groupleave(matcher.group(1));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
             }
         } else if (cmd.equals("%message")) {
             BBPVersion = "BBP/1";
+            Pattern pattern = Pattern.compile("^%message\\s+-m\\s+(\\d+)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                message(splittedInput[1]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                message(matcher.group(1));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
             }
         } else if (cmd.equals("%groupmessage")) {
             BBPVersion = "BBP/2";
+            Pattern pattern = Pattern.compile("^%groupmessage\\s+-g\\s+(\\d+)\\s+-m\\s+(\\d+)");
+            Matcher matcher = pattern.matcher(input);
             try {
-                groupmessage(splittedInput[1], splittedInput[2]);
+               if (!matcher.find()) {
+                  System.out.println("Invalid command. Use %help to see valid commands");
+                  return cmd;
+               }
+                groupmessage(matcher.group(1), matcher.group(2));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
@@ -126,9 +184,12 @@ public class BBPClient extends Thread {
         } else if (cmd.equals("%groups")) {
             BBPVersion = "BBP/2";
             groups();
+        } else if (cmd.equals("%help")) {
+            help();
         } else {
-            System.out.println("Invalid command.");
+            System.out.println("Invalid command. Use %help to see valid commands");
         }
+      
 
         return cmd;
     }
@@ -191,7 +252,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, Arrays.asList(201));
+        currentResponse = sendCommand(command, Arrays.asList(200, 201));
         if (currentResponse != null) {
             System.out.println("Successfully sent message.");
         }
@@ -203,7 +264,7 @@ public class BBPClient extends Thread {
         if (DEBUG) {
             System.out.println("Generated Command: " + command);
         }
-        currentResponse = sendCommand(command, Arrays.asList(201));
+        currentResponse = sendCommand(command, Arrays.asList(200, 201));
         if (currentResponse != null) {
             System.out.println("Successfully sent message to " + group);
         }
@@ -292,30 +353,47 @@ public class BBPClient extends Thread {
     }
 
     private String sendCommand(String command, List<Integer> expected_response_code) {
-        bbpUpdates.pause();
-        String response = "";
-        try {
-            controlWriter.println(command);
-            sleep(500);
-            response = bbpUpdates.getCurrentResponse();
-            if (DEBUG) {
-                System.out.println("Current BBP response: " + response);
-            }
-            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(response);
+      bbpUpdates.pause();
+      String response = "";
+      try {
+          controlWriter.println(command);
+          sleep(  100);
+          response = bbpUpdates.getCurrentResponse();
+          if (DEBUG) {
+              System.out.println("Current BBP response: " + response);
+          }
+          HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(response);
 
-            // check validity of response
-            if (!expected_response_code.stream().anyMatch(s -> s == Integer.parseInt(parsedResponse.get("status")))) {
-                throw new IOException("Bad response: " + response);
-            }
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex);
-            return null;
-        } catch (InterruptedException ex) {
-            System.out.println("InterruptedException: " + ex);
-            return null;
-        }
-        bbpUpdates.resume();
-        return response;
+          // check validity of response
+          if (!expected_response_code.stream().anyMatch(s -> s == Integer.parseInt(parsedResponse.get("status")))) {
+              throw new IOException("Bad response: " + response);
+          }
+      } catch (IOException ex) {
+          System.out.println("IOException: " + ex);
+          return null;
+      } catch (InterruptedException ex) {
+          System.out.println("InterruptedException: " + ex);
+          return null;
+      }
+      bbpUpdates.resume();
+      return response;
+    }
+
+    private void help() {
+      System.out.println("Commands (disregard brackets for parsing purposes):");
+      System.out.println("\t%connect -a [address] -p [port]");
+      System.out.println("\t%join -n [member_name]");
+      System.out.println("\t%post -s [message_subject] -c [message_content]");
+      System.out.println("\t%users");
+      System.out.println("\t%leave");
+      System.out.println("\t%message -m [message_id]");
+      System.out.println("\t%exit");
+      System.out.println("\t%groups");
+      System.out.println("\t%groupjoin -g [group_id] -n [member_name]");
+      System.out.println("\t%grouppost -g [group_id] -s [message_subject] -c [message_content]");
+      System.out.println("\t%groupusers -g [group_id]");
+      System.out.println("\t%groupleave -g [group_id]");
+      System.out.println("\t%groupmessage -g [group_id] -m [message_id]");
     }
 
     public static void main(String argv[]) throws Exception {

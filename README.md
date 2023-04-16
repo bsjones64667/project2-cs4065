@@ -132,19 +132,24 @@ For the purposes of BBP we don’t need some of these ranges and some modificati
 
 ## Client Terminal Commands
 
+-  `%help`
+
+   -  Syntax: `%help`
+   -  Description: This command is used to print all command syntaxs in the client terminal.
+
 -  `%connect`
 
-   -  Syntax: `%connect [address] [port]`
+   -  Syntax: `%connect -a [address] -p [port]`
    -  Description: This command is used to connect to a running bulletin board server. The command is followed by the address and port number of the server.
 
 -  `%join`
 
-   -  Syntax: `%join [member_name]`
+   -  Syntax: `%join -n [member_name]`
    -  Description: This command is used to join the single message board. The command is followed by name for the client in the group being joined.
 
 -  `%post`
 
-   -  Syntax: `%post [message_subject] [message_content]`
+   -  Syntax: `%post -s [message_subject] -c [message_content]`
    -  Description: This command is used to post a message to the board. The command is followed by the message subject and the message content or main body.
 
 -  `%users`
@@ -159,7 +164,7 @@ For the purposes of BBP we don’t need some of these ranges and some modificati
 
 -  `%message`
 
-   -  Syntax: `%message [message_id]`
+   -  Syntax: `%message -m [message_id]`
    -  Description: This command is used to retrieve the content of a specific message posted earlier on the board. The command is followed by a message ID.
 
 -  `%exit`
@@ -175,26 +180,26 @@ In addition to the above commands, the following commands use BBP/2 of the proto
 
 -  `%groupjoin`
 
-   -  Syntax: `%groupjoin [group_id] [member_name]`
+   -  Syntax: `%groupjoin -g [group_id] -n [member_name]`
    -  Description: This command is used to join a specific group. The command is followed by the group id/name and the name for the client in the group being joined. This command uses BBP/2 only.
 
 -  `%grouppost`
 
-   -  Syntax: `%grouppost [group_id] [message_subject] [message_content]`
+   -  Syntax: `%grouppost -g [group_id] -s [message_subject] -c [message_content]`
    -  Description: This command is used to post a message to a message board owned by a specific group. The command is followed by the group id/name, the message subject, and the message content or main body. This command uses BBP/2 only.
 
 -  `%groupusers`
 
-   -  Syntax: `%groupusers [group_id]`
+   -  Syntax: `%groupusers -g [group_id]`
    -  Description: This command is used to retrieve a list of users in a given group. The command is followed by the group id/name.
 
 -  `%groupleave`
 
-   -  Syntax: `%groupleave [group_id]`
+   -  Syntax: `%groupleave -g [group_id]`
    -  Description: This command is used to leave a specific group. The command is followed by the group id/name.
 
 -  `%groupmessage`
-   -  Syntax: `%groupmessage [group_id] [message_id]`
+   -  Syntax: `%groupmessage -g [group_id] -m [message_id]`
    -  Description: This command is used to retrieve the content of a specific message posted earlier on a message board owned by a specific group. The command is followed by the group id/name and message ID. This command uses BBP/2 only.
 
 ## Security Considerations

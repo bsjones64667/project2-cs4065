@@ -76,23 +76,30 @@ public class BBPUpdates implements Runnable {
                 }
             }
             try {
-                currentResponse = controlReader.readLine();
+               synchronized (controlReader) {
+                  try {
+                     currentResponse = controlReader.readLine();
+                  } catch (IOException ex) {
+                      System.out.println("IOException: " + ex);
+                  } catch (NullPointerException ex) {
+                      System.out.println("NullPointerException: " + ex);
+                  }
+              }
+
                 HashMap<String, String> parsedResponse = parseResponse(currentResponse);
-                if (parsedResponse.get("command").equals("POST")) {
-                    System.out.println("Received new message:");
+                if (parsedResponse.get("command").equals("POST") && parsedResponse.get("status").equals("201")) {
+                    System.out.println("Received new message from group " + parsedResponse.get("groups") + ":");
                     System.out.println(parsedResponse.get("messages"));
                     System.out.println("\n");
                 } else if (parsedResponse.get("command").equals("LEAVE") && currentResponse.indexOf("MEMBERS=") != -1) {
-                    System.out.println("Member left group:");
+                    System.out.println("Member left group " + parsedResponse.get("groups") + ":");
                     System.out.println(parsedResponse.get("members"));
                     System.out.println("\n");
                 } else if (parsedResponse.get("command").equals("JOIN") && currentResponse.indexOf("MEMBERS=") != -1 && parsedResponse.get("status").equals("201")) {
-                    System.out.println("Member joined group:");
+                    System.out.println("Member joined group " + parsedResponse.get("groups") + ":");
                     System.out.println(parsedResponse.get("members"));
                     System.out.println("\n");
                 }
-            } catch (IOException ex) {
-                System.out.println("IOException: " + ex);
             } catch (NullPointerException ex) {
                 System.out.println("NullPointerException: " + ex);
             }
@@ -102,7 +109,7 @@ public class BBPUpdates implements Runnable {
 
     public HashMap<String, String> parseResponse(String response) {
       // Define the regex pattern to match the string
-      String pattern = "(?<command>\\S+)\\s+(?<version>\\S+)\\s+STATUS=(?<status>\\d+)?(?: MEMBERS=(?<members>(\\[.*?\\])|\\S+))?(?: GROUPS=(?<groups>(\\[.*?\\])|\\S+))?(?: MESSAGES=(?<messages>(\\{.*?\\})|\\S+))?";
+      String pattern = "(?<command>\\S+)\\s+(?<version>\\S+)\\s+STATUS=(?<status>\\d+)?(?:\\s+MEMBERS=(?<members>[^=\\s]+(?:\\s(?!GROUPS|MESSAGES)[^=\\s]+)*))?(?:\\s+GROUPS=(?<groups>[^=\\s]+(?:\\s(?!MEMBERS|MESSAGES)[^=\\s]+)*))?(?:\\s+MESSAGES=(?<messages>[^=\\s]+(?:\\s(?!MEMBERS|GROUPS)[^=\\s]+)*))?";
 
       // Use Pattern.matcher() to extract the pattern from the input string
       Pattern regex = Pattern.compile(pattern);
@@ -126,8 +133,8 @@ public class BBPUpdates implements Runnable {
 
             String groups = matcher.group("groups");
             if (groups != null) {
-                groups = groups.replaceAll("(^\\[)|(\\]$)", "");
-                result.put("groups", groups);
+               groups = groups.replaceAll("(^\\{)|(\\}$)", "");
+               result.put("groups", groups);
             }
 
             String messages = matcher.group("messages");
