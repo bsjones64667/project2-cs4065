@@ -370,10 +370,10 @@ public class BBPClient extends Thread  {
           }
       } catch (IOException ex) {
           System.out.println("IOException: " + ex);
-          return null;
+          response = null;
       } catch (InterruptedException ex) {
           System.out.println("InterruptedException: " + ex);
-          return null;
+          response = null;
       }
       bbpUpdates.resume();
       return response;

@@ -76,16 +76,7 @@ public class BBPUpdates implements Runnable {
                 }
             }
             try {
-               synchronized (controlReader) {
-                  try {
-                     currentResponse = controlReader.readLine();
-                  } catch (IOException ex) {
-                      System.out.println("IOException: " + ex);
-                  } catch (NullPointerException ex) {
-                      System.out.println("NullPointerException: " + ex);
-                  }
-              }
-
+               currentResponse = controlReader.readLine();
                 HashMap<String, String> parsedResponse = parseResponse(currentResponse);
                 if (parsedResponse.get("command").equals("POST") && parsedResponse.get("status").equals("201")) {
                     System.out.println("Received new message from group " + parsedResponse.get("groups") + ":");
@@ -100,6 +91,8 @@ public class BBPUpdates implements Runnable {
                     System.out.println(parsedResponse.get("members"));
                     System.out.println("\n");
                 }
+            } catch (IOException ex) {
+               System.out.println("IOException: " + ex);
             } catch (NullPointerException ex) {
                 System.out.println("NullPointerException: " + ex);
             }
