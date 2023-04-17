@@ -23,6 +23,7 @@ public class BBPClient extends Thread  {
     private BBPUpdates bbpUpdates;
     private Thread t;
     private String lastResponseStatus = "";
+    private Boolean connected = false;
 
     public BBPClient() {
     }
@@ -32,7 +33,7 @@ public class BBPClient extends Thread  {
         String currentInput;
         String cmd = "";
         help();
-        while (!(cmd.equals("%exit") && lastResponseStatus.equals("200"))) {
+        while (!(cmd == "%exit" && lastResponseStatus.equals("200"))) {
             System.out.println("\nPlease enter a command (commands found in README):");
             currentInput = in.nextLine();
             if (DEBUG) {
@@ -49,7 +50,11 @@ public class BBPClient extends Thread  {
          String cmd = splittedInput[0];
 
         if (cmd.equals("%connect")) {
-            BBPVersion = "BBP/1";
+            if (connected) {
+               System.out.println("You are already connected.");
+               return null;
+            }
+            BBPVersion = "BBP/2";
             Pattern pattern = Pattern.compile("^%connect\\s+-a\\s+(\\S+)\\s+-p\\s+(\\d+)");
             Matcher matcher = pattern.matcher(input);
             try {
@@ -58,6 +63,14 @@ public class BBPClient extends Thread  {
                   return cmd;
                }
                 connect(matcher.group(1), matcher.group(2));
+               try {
+                  // Wait for sockets and readers to be made before executing commands
+                  sleep( 500);
+               } catch (InterruptedException ex) {
+                  System.out.println("InterruptedException: " + ex);
+               }
+               
+                groups();
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("Not enough parameters for the command.");
                 System.out.println("ArrayIndexOutOfBoundsException: " + ex);
@@ -204,6 +217,7 @@ public class BBPClient extends Thread  {
             bbpUpdates = new BBPUpdates(controlSocket);
             t = new Thread(bbpUpdates);
             t.start();
+            connected = true;
         } catch (UnknownHostException ex) {
             System.out.println("UnknownHostException: " + ex);
         } catch (IOException ex) {
@@ -271,7 +285,7 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200, 201));
         if (currentResponse != null) {
-            System.out.println("Successfully sent message to " + group);
+            System.out.println("Successfully sent message to group " + group);
         }
     }
 
@@ -357,18 +371,19 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
             System.out.println("Groups: ");
-            System.out.println(currentResponse.substring(currentResponse.indexOf("GROUPS=") + "GROUPS=".length()));
+            System.out.println(parsedResponse.get("groups"));
         }
     }
 
     private String sendCommand(String command, List<Integer> expected_response_code) {
       bbpUpdates.pause();
-      String response = "";
+      String response = null;
       try {
           controlWriter.println(command);
-          sleep(  100);
-          response = bbpUpdates.getCurrentResponse();
+          sleep(  500);
+         response = bbpUpdates.getCurrentResponse();
           if (DEBUG) {
               System.out.println("Current BBP response: " + response);
           }
@@ -381,10 +396,8 @@ public class BBPClient extends Thread  {
           }
       } catch (IOException ex) {
           System.out.println("IOException: " + ex);
-          response = null;
       } catch (InterruptedException ex) {
           System.out.println("InterruptedException: " + ex);
-          response = null;
       }
       bbpUpdates.resume();
       return response;
