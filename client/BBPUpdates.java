@@ -76,21 +76,23 @@ public class BBPUpdates implements Runnable {
                 }
             }
             try {
-               currentResponse = controlReader.readLine();
-                HashMap<String, String> parsedResponse = parseResponse(currentResponse);
-                if (parsedResponse.get("command").equals("POST") && parsedResponse.get("status").equals("201")) {
-                    System.out.println("Received new message from group " + parsedResponse.get("groups") + ":");
-                    System.out.println(parsedResponse.get("messages"));
-                    System.out.println("\n");
-                } else if (parsedResponse.get("command").equals("LEAVE") && currentResponse.indexOf("MEMBERS=") != -1) {
-                    System.out.println("Member left group " + parsedResponse.get("groups") + ":");
-                    System.out.println(parsedResponse.get("members"));
-                    System.out.println("\n");
-                } else if (parsedResponse.get("command").equals("JOIN") && currentResponse.indexOf("MEMBERS=") != -1 && parsedResponse.get("status").equals("201")) {
-                    System.out.println("Member joined group " + parsedResponse.get("groups") + ":");
-                    System.out.println(parsedResponse.get("members"));
-                    System.out.println("\n");
-                }
+               synchronized (controlReader) {
+                  currentResponse = controlReader.readLine();
+                   HashMap<String, String> parsedResponse = parseResponse(currentResponse);
+                   if (parsedResponse.get("command").equals("POST") && parsedResponse.get("status").equals("201")) {
+                       System.out.println("Received new message from group " + parsedResponse.get("groups") + ":");
+                       System.out.println(parsedResponse.get("messages"));
+                       System.out.println("\n");
+                   } else if (parsedResponse.get("command").equals("LEAVE") && currentResponse.indexOf("MEMBERS=") != -1) {
+                       System.out.println("Member left group " + parsedResponse.get("groups") + ":");
+                       System.out.println(parsedResponse.get("members"));
+                       System.out.println("\n");
+                   } else if (parsedResponse.get("command").equals("JOIN") && currentResponse.indexOf("MEMBERS=") != -1 && parsedResponse.get("status").equals("201")) {
+                       System.out.println("Member joined group " + parsedResponse.get("groups") + ":");
+                       System.out.println(parsedResponse.get("members"));
+                       System.out.println("\n");
+                   }
+               }
             } catch (IOException ex) {
                System.out.println("IOException: " + ex);
             } catch (NullPointerException ex) {

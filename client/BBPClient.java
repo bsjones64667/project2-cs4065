@@ -65,7 +65,7 @@ public class BBPClient extends Thread  {
                 connect(matcher.group(1), matcher.group(2));
                try {
                   // Wait for sockets and readers to be made before executing commands
-                  sleep( 500);
+                  sleep( 1);
                } catch (InterruptedException ex) {
                   System.out.println("InterruptedException: " + ex);
                }
@@ -250,7 +250,9 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
            System.out.println("Successfully joined.");
+           System.out.println("Last two message in group:\n" + parsedResponse.get("messages"));
         }
     }
 
@@ -261,7 +263,9 @@ public class BBPClient extends Thread  {
         }
         currentResponse = sendCommand(command, Arrays.asList(200));
         if (currentResponse != null) {
+            HashMap<String, String> parsedResponse = bbpUpdates.parseResponse(currentResponse);
            System.out.println("Successfully joined group " + groupName);
+           System.out.println("Last two message in group:\n" + parsedResponse.get("messages"));
         }
     }
 
@@ -382,7 +386,7 @@ public class BBPClient extends Thread  {
       String response = null;
       try {
           controlWriter.println(command);
-          sleep(  500);
+          sleep(  1);
          response = bbpUpdates.getCurrentResponse();
           if (DEBUG) {
               System.out.println("Current BBP response: " + response);
@@ -396,8 +400,11 @@ public class BBPClient extends Thread  {
           }
       } catch (IOException ex) {
           System.out.println("IOException: " + ex);
-      } catch (InterruptedException ex) {
+          response = null;
+      } 
+      catch (InterruptedException ex) {
           System.out.println("InterruptedException: " + ex);
+          response = null;
       }
       bbpUpdates.resume();
       return response;
