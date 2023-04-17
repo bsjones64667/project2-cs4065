@@ -63,44 +63,6 @@ The following commands are supported by the BBP communication protocol regardles
    -  An EXIT request requires no additional fields
    -  An EXIT response is sent with the STATUS field corresponding to whether the EXIT was successful
 
-## BBP Server Design
-
-When building a BBP server a few things must take place to properly utilize the protocol. The server must be able to parse the given requests, allow client connections using sockets, store the connections and messages for the groups it provides, and build responses in the aforementioned structure.
-
-The server should store a dictionary for the groups it supports. Each group in this dictionary should have information about the messages sent in the group and the current users in the group. Something like the following:
-
-```
-const groups = [
-{
-name: "Group 1",
-members: [
-   <connectionId1>: "connection 1 name in group",
-   <connectionId2>: "connection 2 name in group"
-],
-messages: [
-   {
-         MessageID: 1,
-         Sender: <connectionId1>,
-         PostDate: "3/21/2023 9:36am",
-         Subject: "Greeting",
-         Content: "Hi there, How is everyone?"
-   }
-]
-}
-]
-```
-
-The server will also need to store a dictionary of its connections and assign an id to them to make sending messages to members of groups easier. This can look like the following:
-
-```
-const connections = {
-<connectionId1>: WebSocketObject for connection 1,
-<connectionId2>: WebSocketObject for connection 2
-}
-```
-
-These two dictionaries will need to be shared amongst all connection threads because any given connection can manipulate or retrieve these dictionaries
-
 ## Status Codes
 
 The server attaches a status code to tell the client whether their requests were successful and if not what went wrong. These status codes are set up in ranges similar to HTTPs status codes.
@@ -131,6 +93,45 @@ For the purposes of BBP we don’t need some of these ranges and some modificati
 -  `"501": Not Implemented`
 -  `"502": Bad Gateway`
 -  `"503": Service Unavailable`
+
+## BBP Server Design
+
+When building a BBP server a few things must take place to properly utilize the protocol. The server must be able to parse the given requests, allow client connections using sockets, store the connections and messages for the groups it provides, and build responses in the aforementioned structure.
+
+The server should store a dictionary for the groups it supports. Each group in this dictionary should have information about the messages sent in the group and the current users in the group. Something like the following:
+
+```
+const groups = [
+{
+id: 1,
+name: "Group 1",
+members: [
+   <connectionId1>: "connection 1 name in group",
+   <connectionId2>: "connection 2 name in group"
+],
+messages: [
+   {
+         MessageID: 1,
+         Sender: <connectionId1>,
+         PostDate: "3/21/2023 9:36am",
+         Subject: "Greeting",
+         Content: "Hi there, How is everyone?"
+   }
+]
+}
+]
+```
+
+The server will also need to store a dictionary of its connections and assign an id to them to make sending messages to members of groups easier. This can look like the following:
+
+```
+const connections = {
+<connectionId1>: WebSocketObject for connection 1,
+<connectionId2>: WebSocketObject for connection 2
+}
+```
+
+These two dictionaries will need to be shared amongst all connection threads because any given connection can manipulate or retrieve these dictionaries
 
 ## Client Terminal Commands
 
