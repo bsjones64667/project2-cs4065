@@ -1,4 +1,4 @@
-## Devin Harris & Brandon Jones
+Devin Harris & Brandon Jones
 
 # Internet Protocol for Bulletin Board Protocol (BBP) Communication
 
