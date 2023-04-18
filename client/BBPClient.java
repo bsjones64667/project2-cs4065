@@ -65,7 +65,7 @@ public class BBPClient extends Thread  {
                 connect(matcher.group(1), matcher.group(2));
                try {
                   // Wait for sockets and readers to be made before executing commands
-                  sleep( 1);
+                  sleep( 500);
                } catch (InterruptedException ex) {
                   System.out.println("InterruptedException: " + ex);
                }
