@@ -15,6 +15,9 @@ The following are the required installs to run the programs and the versions tha
 - Python 3.11.3
 - Java Version 8 Update 251
 
+## Compiling Client
+To compile the client, run the following command: `javac client/BBPClient.java`. This will generate a class file that can be called with the below running command. The server does not require any additional compilation.
+
 ## Running Client & Server
 To run the client, run the following command: `java client.BBPClient`. This will use your installed Java version to run the client, starting a console loop to enter commands. To run the server, run the following command: `python server/WebServer.py`. This will use your Python installation to run the server program, which does not require any additional input and will loop infinitely until terminated.
 
