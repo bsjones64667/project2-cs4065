@@ -10,6 +10,14 @@ This document describes an Internet protocol for Bulletin Board Protocol (BBP) c
 
 Bulletin Boards have been used for decades as a way for users to communicate and share information with each other. With the rise of the Internet, Bulletin boards have evolved into online forums and discussion boards. This protocol is designed to facilitate communication between a client and a BBP server using pure unicast sockets.
 
+## Requirements
+The following are the required installs to run the programs and the versions that they have been tested with. Note that other versions may work, but they have not been tested. The below versions will ensure the program works as expected.
+- Python 3.11.3
+- Java Version 8 Update 251
+
+## Running Client & Server
+To run the client, run the following command: `java client.BBPClient`. This will use your installed Java version to run the client, starting a console loop to enter commands. To run the server, run the following command: `python server/WebServer.py`. This will use your Python installation to run the server program, which does not require any additional input and will loop infinitely until terminated.
+
 ## Protocol Structure
 
 The protocol follows the following header structure in its requests and responses:
